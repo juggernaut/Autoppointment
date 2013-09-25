@@ -14,18 +14,21 @@ OFFICES = {
 def main(args):
     args = parse_args(args)
     post_data = build_post_data(args)
-    for oname, oid in OFFICES.iteritems():
-        post_data['officeId'] = oid
-        earliest = get_earliest_appointment(post_data)
-        if earliest:
-            print 'The earliest appointment in %s is on %s' % (oname, earliest)
-    return 0
+    try:
+        for oname, oid in OFFICES.iteritems():
+            post_data['officeId'] = oid
+            earliest = get_earliest_appointment(post_data)
+            if earliest:
+                print 'The earliest appointment in %s is on %s' % (oname, earliest)
+        return 0
+    except:
+        return 1
 
 
 def parse_args(args):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--firstname', required=True)
-    parser.add_argument('--lastname', required=True)
+    parser.add_argument('--firstname', required=True, type=lambda s: s.upper())
+    parser.add_argument('--lastname', required=True, type=lambda s: s.upper())
     parser.add_argument('--phone', required=True, type=telephone)
     return parser.parse_args(args)
 
