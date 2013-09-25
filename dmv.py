@@ -1,3 +1,4 @@
+import argparse
 import sys
 
 from bs4 import BeautifulSoup
@@ -10,16 +11,39 @@ OFFICES = {
     'SANTA CLARA': '632',
 }
 
-def main():
+def main(args):
+    args = parse_args(args)
+    post_data = build_post_data(args)
     for oname, oid in OFFICES.iteritems():
-        earliest = get_earliest_appointment(oid)
+        post_data['officeId'] = oid
+        earliest = get_earliest_appointment(post_data)
         if earliest:
             print 'The earliest appointment in %s is on %s' % (oname, earliest)
     return 0
 
 
-def get_earliest_appointment(city_id):
-    data = {'officeId': str(city_id), 'numberItems': '1', 'taskDL': 'true', 'firstName': 'AMEYA', 'lastName': 'LOKARE', 'telArea': '900', 'telPrefix':'310', 'telSuffix': '0000', 'resetCheckFields': 'true'}
+def parse_args(args):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--firstname', required=True)
+    parser.add_argument('--lastname', required=True)
+    parser.add_argument('--phone', required=True, type=telephone)
+    return parser.parse_args(args)
+
+
+def telephone(arg):
+    """
+    Parses the telephone number
+    """
+    if arg.startswith('+1'):
+        arg = arg[2:]
+    if len(arg) == 10:
+        return arg[:3], arg[3:6], arg[6:10]
+
+def build_post_data(args):
+    return {'numberItems': '1', 'taskDL': 'true', 'firstName': args.firstname, 'lastName': args.lastname, 'telArea': args.phone[0], 'telPrefix': args.phone[1], 'telSuffix': args.phone[2], 'resetCheckFields': 'true'}
+
+
+def get_earliest_appointment(data):
     r = requests.post('https://www.dmv.ca.gov/wasapp/foa/findOfficeVisit.do', data = data)
     soup = BeautifulSoup(r.content)
     #print soup.prettify()
@@ -29,4 +53,4 @@ def get_earliest_appointment(city_id):
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))
